@@ -13,6 +13,10 @@
     <header>
         <h1>Market Dashboard</h1>
         <p>Stay updated with the latest market trends and news.</p>
+        <div class="auth-buttons">
+            <button id="login-btn">Login</button>
+            <button id="signup-btn">Sign Up</button>
+        </div>
     </header>
 
     <!-- Market Graphs Section -->
@@ -21,15 +25,15 @@
         <div class="graph-container">
             <div class="graph">
                 <h3>Stock Market Index</h3>
-                <img src="" alt="Stock Market Graph">
+                <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Stock Market Index Graph">
             </div>
             <div class="graph">
                 <h3>Cryptocurrency Trends</h3>
-                <img src="https://via.placeholder.com/400x200" alt="Crypto Graph">
+                <img src="https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Cryptocurrency Trends Graph">
             </div>
             <div class="graph">
                 <h3>Commodity Prices</h3>
-                <img src="https://via.placeholder.com/400x200" alt="Commodity Graph">
+                <img src="https://images.unsplash.com/photo-1604594849809-dfedbc827105?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Commodity Prices Graph">
             </div>
         </div>
     </section>
@@ -41,70 +45,92 @@
             <div class="news-card">
                 <h3>Stock Market Hits All-Time High</h3>
                 <p>The stock market reached a new peak today, driven by strong earnings reports.</p>
-                <a href="#">Read more</a>
+                <a href="#" aria-label="Read more about Stock Market Hits All-Time High">Read more</a>
             </div>
             <div class="news-card">
                 <h3>Bitcoin Surges Past $50,000</h3>
                 <p>Bitcoin's price surged as institutional investors continue to show interest.</p>
-                <a href="#">Read more</a>
+                <a href="#" aria-label="Read more about Bitcoin Surges Past $50,000">Read more</a>
             </div>
             <div class="news-card">
                 <h3>Gold Prices Drop Amid Rate Hike Fears</h3>
                 <p>Gold prices fell as investors brace for potential interest rate hikes.</p>
-                <a href="#">Read more</a>
+                <a href="#" aria-label="Read more about Gold Prices Drop Amid Rate Hike Fears">Read more</a>
             </div>
         </div>
     </section>
 
     <!-- Floating Chatbot Icon -->
-    <div class="chatbot-icon" id="chatbot-icon">
+    <div class="chatbot-icon locked" id="chatbot-icon" aria-label="Open chatbot">
         <img src="https://via.placeholder.com/50" alt="Chatbot Icon">
+        <span class="lock-icon">🔒</span>
     </div>
 
     <!-- Chatbot Popup -->
     <div class="chatbot-popup" id="chatbot-popup">
         <div class="chat-header">
             <h3>Fintech Financial Advisor</h3>
-            <button id="close-chatbot">×</button>
+            <button id="close-chatbot" aria-label="Close chatbot">×</button>
         </div>
         <div class="chat-box" id="chat-box">
             <div class="bot-message">Hello! I'm your fintech financial advisor. How can I assist you today?</div>
         </div>
         <form id="chat-form">
-            <input type="text" id="user-input" name="user_input" placeholder="Type your message..." required>
-            <button type="submit">Send</button>
+            <input type="text" id="user-input" name="user_input" placeholder="Type your message..." required aria-label="Type your message">
+            <button type="submit" aria-label="Send message">Send</button>
         </form>
     </div>
 
+    <!-- Login/Signup Modal -->
+    <div class="modal" id="auth-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h2 id="modal-title">Login</h2>
+            <form id="auth-form">
+                <input type="email" id="email" placeholder="Email" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit" id="auth-submit-btn">Submit</button>
+            </form>
+            <p id="toggle-auth">Don't have an account? <a href="#">Sign Up</a></p>
+        </div>
+    </div>
+
     <script>
+        let isLoggedIn = false;
+
         // Toggle chatbot popup
         const chatbotIcon = document.getElementById("chatbot-icon");
         const chatbotPopup = document.getElementById("chatbot-popup");
         const closeChatbot = document.getElementById("close-chatbot");
 
         chatbotIcon.addEventListener("click", () => {
-            chatbotPopup.style.display = "block";
+            if (isLoggedIn) {
+                chatbotPopup.style.display = "block";
+                chatbotIcon.style.display = "none";
+            } else {
+                alert("Please login to access the chatbot.");
+            }
         });
 
         closeChatbot.addEventListener("click", () => {
             chatbotPopup.style.display = "none";
+            chatbotIcon.style.display = "block";
         });
 
         // Handle form submission
         document.getElementById("chat-form").addEventListener("submit", function (e) {
-            e.preventDefault(); // Prevent page reload
-
+            e.preventDefault();
             const userInput = document.getElementById("user-input").value;
             const chatBox = document.getElementById("chat-box");
 
-            // Add user message to the chat box
+            // Add user message
             chatBox.innerHTML += `<div class="user-message">You: ${userInput}</div>`;
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
 
-            // Clear the input field
+            // Clear input
             document.getElementById("user-input").value = "";
 
-            // Send the user input to the server
+            // Send to server
             fetch("/chat", {
                 method: "POST",
                 headers: {
@@ -114,12 +140,82 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Add bot response to the chat box
                 chatBox.innerHTML += `<div class="bot-message">Fintech Advisor: ${data.response}</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
+                chatBox.scrollTop = chatBox.scrollHeight;
             })
             .catch(error => {
                 console.error("Error:", error);
+                chatBox.innerHTML += `<div class="bot-message">Fintech Advisor: Sorry, I encountered an error. Please try again.</div>`;
+            });
+        });
+
+        // Auth Modal
+        const authModal = document.getElementById("auth-modal");
+        const loginBtn = document.getElementById("login-btn");
+        const signupBtn = document.getElementById("signup-btn");
+        const closeModal = document.getElementById("close-modal");
+        const toggleAuth = document.getElementById("toggle-auth");
+        const modalTitle = document.getElementById("modal-title");
+        const authForm = document.getElementById("auth-form");
+        const authSubmitBtn = document.getElementById("auth-submit-btn");
+
+        loginBtn.addEventListener("click", () => {
+            authModal.style.display = "block";
+            modalTitle.textContent = "Login";
+            authSubmitBtn.textContent = "Login";
+            toggleAuth.innerHTML = `Don't have an account? <a href="#">Sign Up</a>`;
+        });
+
+        signupBtn.addEventListener("click", () => {
+            authModal.style.display = "block";
+            modalTitle.textContent = "Sign Up";
+            authSubmitBtn.textContent = "Sign Up";
+            toggleAuth.innerHTML = `Already have an account? <a href="#">Login</a>`;
+        });
+
+        closeModal.addEventListener("click", () => {
+            authModal.style.display = "none";
+        });
+
+        toggleAuth.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (modalTitle.textContent === "Login") {
+                modalTitle.textContent = "Sign Up";
+                authSubmitBtn.textContent = "Sign Up";
+                toggleAuth.innerHTML = `Already have an account? <a href="#">Login</a>`;
+            } else {
+                modalTitle.textContent = "Login";
+                authSubmitBtn.textContent = "Login";
+                toggleAuth.innerHTML = `Don't have an account? <a href="#">Sign Up</a>`;
+            }
+        });
+
+        authForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const isLogin = modalTitle.textContent === "Login";
+
+            fetch(isLogin ? "/login" : "/signup", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    isLoggedIn = true;
+                    chatbotIcon.classList.remove("locked");
+                    chatbotIcon.querySelector(".lock-icon").style.display = "none";
+                    authModal.style.display = "none";
+                }
+                alert(data.message);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred. Please try again.");
             });
         });
     </script>
